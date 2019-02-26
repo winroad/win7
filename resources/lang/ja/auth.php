@@ -28,9 +28,4 @@ return [
     'reset_password' => 'パスワードのリセット',
     'send_link' => 'パスワード再設定リンクの送信'
 
-//    'attributes' => [
-//        'login' => 'ログイン',
-//        'register' => '新規登録',
-//    ],
-
 ];

@@ -123,6 +123,7 @@ return [
     'attributes' => [
         'email' => 'メールアドレス',
         'password' => 'パスワード',
+        'file' => 'ファイル',
 ],
 
 ];
