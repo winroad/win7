@@ -51,7 +51,7 @@ class HomeController extends Controller
             $img = new WinImage();
             $img->set($avatar);
             $img->resize(100);
-            $img->save('public/images');
+            $img->upload('public/images');
             return redirect('/home')->with('success', '保存しました');
         } else {
             return redirect()
