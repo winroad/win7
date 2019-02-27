@@ -8,7 +8,7 @@ use Image;
 class WinImage
 {
     protected $image;
-    protected $width='full';
+    protected $width = 4000;
 
     public function Set($file)
     {
@@ -20,24 +20,23 @@ class WinImage
         return $this->image;
     }
 
-    public function Resize($width=100)
+    public function Resize($width=100,$height=null)
     {
         $image = Image::make($this->image);
-        $image->resize($width, null, function ($aspect){
+        $image->resize($width, $height, function ($aspect){
             $aspect->aspectRatio();
         });
         $image->save();
         $this->width = $width;
     }
-    public function save($folder)
+    public function upload($folder)
     {
-//        $image = Image::make($this->image);
         $user = User::find(auth()->id());
         $this->image->store($folder.'/'.$this->width);
         Photo::Create([
             'user_id' => $user->id,
-            'folder' => $folder,
-            'name' => $this->width.'/'.$this->image->hashName(),
+            'folder' => $folder.'/'.$this->width,
+            'name' => $this->image->hashName(),
         ]);
     }
 }
