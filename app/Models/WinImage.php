@@ -8,7 +8,7 @@ use Image;
 class WinImage
 {
     protected $image;
-    protected $width = 4000;
+    protected $width;
 
     public function Set($file)
     {
