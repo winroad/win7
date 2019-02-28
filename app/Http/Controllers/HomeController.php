@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Photo;
 use App\Models\WinImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,15 +28,15 @@ class HomeController extends Controller
      */
     public function index()
     {
-//        $win = new WinImage();
-//        $win->upload();
         $user = User::find(auth()->id());
-        return view('home',compact('user'));
+        $photos = Photo::Thumbnail()->get();
+        return view('home',compact('user','photos'));
     }
     /*
-     * WinImageモデルを使った例
+     * 画像のアップロード
+     * アップロード時に元画像とサムネイル画像を登録する
      */
-    public function up(Request $request)
+    public function upload(Request $request)
     {
         $this->validate($request,[
             'file' => [
@@ -43,15 +44,13 @@ class HomeController extends Controller
                 'file',
                 'image',
                 'mimes:jpeg,png',
-                'dimensions:min_width=100,min_height=100,max_width=4000,max_height=4000',
+                'dimensions:min_width=100,min_height=100,max_width=8000,max_height=8000',
             ]
         ]);
         if($request->file('file')->isValid([])){
-            $avatar = $request->file;
-            $img = new WinImage();
-            $img->set($avatar);
-            $img->resize(100);
-            $img->upload('public/images');
+            $file = $request->file;
+            $photo = new Photo();
+            $photo->Upload($file);
             return redirect('/home')->with('success', '保存しました');
         } else {
             return redirect()
@@ -60,10 +59,37 @@ class HomeController extends Controller
                 ->withErrors(['file' => '画像がアップされていないか不正なデータです。']);
         }
     }
+    /*
+     * 画像の表示
+     */
+    public function photoview($id)
+    {
+        $photo = Photo::find($id);
+        return view('photos.view',compact('photo'));
+    }
+    /*
+     * 画像の削除
+     */
+    public function photoDelete($id)
+    {
+        $photo = Photo::find($id);
+        $photo->allDelete($id);
+        return redirect('home');
+    }
+    /*
+     * 画像の回転
+     */
+    public function photoTurn($id)
+    {
+        $photo = Photo::find($id);
+        $photo->turn($id);
+        return redirect('home');
+    }
 
     /*
      * アバターのアップロード処理
-     */
+     *
+     *
     public function upload(Request $request)
     {
       $this->validate($request,[
@@ -77,6 +103,15 @@ class HomeController extends Controller
         ]);
         if($request->file('file')->isValid([])){
             $avatar = $request->file;
+            $photo = new Photo();
+            $photo->Upload($avatar);
+
+
+            $img = new WinImage();
+            $img->set($avatar);
+            $img->resize(100);
+            $img->upload('public/images');
+
 //            $avatar = WinImage::get($request->file);
 //            dd($avatar);
 //            $win->upload($avatar);
@@ -94,8 +129,6 @@ class HomeController extends Controller
             });
             $img2->save();
             $avatar->store('public/images');
-//            $img300->fit(300)->save();
-//            $avatar->store('public/images');
             $file = $request->file->store('public/avatar');
             $user = User::find(auth()->id());
             //以前のファイルの削除
@@ -114,4 +147,5 @@ class HomeController extends Controller
                 ->withErrors(['file' => '画像がアップされていないか不正なデータです。']);
         }
     }
+    */
 }
