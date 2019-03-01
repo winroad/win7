@@ -12,10 +12,10 @@
                             {{ session('status') }}
                         </div>
                     @endif
-                    @if($photos)
-                        @foreach($photos as $photo)
-                        <a href="photo/view/{{ $photo->id }}">
-                            <img src="{{ asset('storage/thumbnails/'.$photo->name) }}" alt="thumbnail">
+                    @if($thumbs)
+                        @foreach($thumbs as $thumb)
+                        <a href="photo/view/{{ $thumb->photo->id }}">
+                            <img src="{{ asset('storage/thumbnails/'.$thumb->photo->name) }}" alt="thumbnail">
                         </a>
                         @endforeach
                     @endif
@@ -45,6 +45,7 @@
                 </div>
             </div>
         </div>
+        {{ $thumbs->links() }}
     </div>
 </div>
 @endsection

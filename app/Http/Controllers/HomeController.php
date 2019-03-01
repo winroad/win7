@@ -29,8 +29,9 @@ class HomeController extends Controller
     public function index()
     {
         $user = User::find(auth()->id());
-        $photos = Photo::Thumbnail()->get();
-        return view('home',compact('user','photos'));
+        $photo = new Photo();
+        $thumbs = $photo->getMyThumbnails();
+        return view('home',compact('user','thumbs'));
     }
     /*
      * 画像のアップロード
@@ -44,11 +45,12 @@ class HomeController extends Controller
                 'file',
                 'image',
                 'mimes:jpeg,png',
-                'dimensions:min_width=100,min_height=100,max_width=8000,max_height=8000',
+                'dimensions:min_width=100,min_height=100,max_width=5000,max_height=5000',
             ]
         ]);
         if($request->file('file')->isValid([])){
             $file = $request->file;
+//            dd($file);
             $photo = new Photo();
             $photo->Upload($file);
             return redirect('/home')->with('success', '保存しました');
@@ -65,7 +67,9 @@ class HomeController extends Controller
     public function photoview($id)
     {
         $photo = Photo::find($id);
-        return view('photos.view',compact('photo'));
+        $base = $photo->getBasePhoto();
+//        dd(asset($base->dir.'/'.$base->photo->name));
+        return view('photos.view',compact('base'));
     }
     /*
      * 画像の削除

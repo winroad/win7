@@ -11,45 +11,30 @@ class Photo extends Model
     protected $table='photos';
     protected $guarded = ['id', 'created_at', 'updated_at'];
 
-    protected $folder = 'public/images';
-    protected $thumb_folder = 'public/thumbnails';
+    protected $dir = 'public/images';
+    protected $thumb_dir = 'public/thumbnails';
 
     public function User()
     {
         return $this->belongsTo('App\User');
     }
 
-    public function scopeThumbnail($query)
+    public function Stores()
     {
-        $user = User::find(auth()->id());
-        $query->where('user_id',$user->id);
-        $query->where('folder',$this->thumb_folder);
-        return $query;
+        return $this->hasMany('App\Models\PhotoStore');
     }
+
     /*
      * 写真の登録
      * 第１引数にファイル、第２引数に保存先を指定します
      */
     public function Upload($file)
     {
-        $user = User::find(auth()->id());
-        //元画像登録
+        //画像登録
         $win = new WinImage();
-        $img = $win->set($file);
-        $img->store($this->folder);
-        Photo::Create([
-            'user_id' => $user->id,
-            'folder' => $this->folder,
-            'name' => $img->hashName(),
-        ]);
-        //サムネイルの登録
-        $win->thumbnail();
-        $img->store($this->thumb_folder);
-        Photo::Create([
-            'user_id' => $user->id,
-            'folder' => $this->thumb_folder,
-            'name' => $img->hashName(),
-        ]);
+        $win->set($file);
+        $win->upload();
+
     }
     /*
      * 登録されている写真（元画像、サムネイル、データベース）を削除する
@@ -57,9 +42,13 @@ class Photo extends Model
     public function allDelete($id)
     {
         $photo = Photo::find($id);
-        Storage::delete($this->folder . '/' . $photo->name);
-        Storage::delete($this->thumb_folder . '/' . $photo->name);
-        Photo::where('name',$photo->name)->delete();
+        $stores = $photo->stores;
+        foreach($stores as $store){
+            Storage::delete($store->dir . '/' . $store->photo->name);
+            Storage::delete($store->thumb_dir . '/' . $store->photo->name);
+        }
+        PhotoStore::where('photo_id',$photo->id)->delete();
+        Photo::find($id)->delete();
     }
     /*
      * 画像を回転させる
@@ -67,14 +56,45 @@ class Photo extends Model
     public function Turn($id)
     {
         $photo = Photo::find($id);
-        $file = url($this->folder . '/' . $photo->name);
+        $url = $this->dir . '/' . $photo->name;
+        $image = Storage::get($url);
         $win = new WinImage();
-        $win->set($file);
-        $win->turn();
-        $win->store($this->folder);
-        $thumb = $this->thumb_folder.'/'.$photo->name;
+        $win->set($image);
+        $win->setName($photo->name);
+        $win->turn($id);
+        Storage::put($url, $win);
+        $thumb = $this->thumb_dir.'/'.$photo->name;
         $win->set($thumb);
-        $win->store($this->thumb_folder);
+        $win->turn($id);
+        Storage::put($thumb, $win);
+    }
+    /*
+     * 個人所有のサムネイル画像を取得する
+     */
+    public function getMyThumbnails($id=null)
+    {
+        if(is_null($id)) {
+            $user = User::find(auth()->id());
+        } else {
+            $user = User::find($id);
+        }
+        $thumbs = PhotoStore::where('user_id',$user->id)
+            ->where('dir',$this->thumb_dir)
+            ->paginate();
+        return $thumbs;
+    }
+    /*
+     * photoのidから元画像を取得する
+     */
+    public function getBasePhoto($id=null)
+    {
+        if(is_null($id)){
+            $id = $this->id;
+        }
+        $store = PhotoStore::where('photo_id',$id)
+            ->where('dir',$this->dir)
+            ->first();
+        return $store;
     }
 
 }

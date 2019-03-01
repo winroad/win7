@@ -6,12 +6,12 @@
         <div class="card">
             <div class="card-header">
                 <a href="/home" class="btn btn-primary">Topへ</a>
-                <a href="{{ url('photo/turn',$photo->id) }}" class="btn btn-success">回転</a>
-                <a href="{{ url('photo/delete',$photo->id) }}" class="btn btn-danger">削除</a>
+                <a href="{{ url('photo/turn',$base->id) }}" class="btn btn-success">回転</a>
+                <a href="{{ url('photo/delete',$base->photo->id) }}" class="btn btn-danger">削除</a>
             </div>
             <div class="card-body">
                 <div class="col no-gutters text-center">
-                    <img class="img-fluid" src="{{ asset('storage/images/'.$photo->name) }}">
+                    <img class="img-fluid" src="{{ asset('storage/images/'.$base->photo->name) }}">
                 </div>
             </div>
         </div>
