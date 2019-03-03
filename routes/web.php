@@ -18,6 +18,7 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/home/{num}', 'HomeController@index');
 Route::get('photo/view/{id}', 'HomeController@photoView');
 Route::get('photo/delete/{id}', 'HomeController@photoDelete');
 Route::get('photo/turn/{id}', 'HomeController@photoTurn');

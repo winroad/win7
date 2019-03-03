@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+//use Illuminate\Support\Facades\DB;
+use DB;
 use App\User;
 use Storage;
 
@@ -67,21 +69,6 @@ class Photo extends Model
         $win->set($thumb);
         $win->turn($id);
         Storage::put($thumb, $win);
-    }
-    /*
-     * 個人所有のサムネイル画像を取得する
-     */
-    public function getMyThumbnails($id=null)
-    {
-        if(is_null($id)) {
-            $user = User::find(auth()->id());
-        } else {
-            $user = User::find($id);
-        }
-        $thumbs = PhotoStore::where('user_id',$user->id)
-            ->where('dir',$this->thumb_dir)
-            ->paginate();
-        return $thumbs;
     }
     /*
      * photoのidから元画像を取得する

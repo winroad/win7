@@ -14,7 +14,7 @@
                     @endif
                     @if($thumbs)
                         @foreach($thumbs as $thumb)
-                        <a href="photo/view/{{ $thumb->photo->id }}">
+                        <a href="{{ url('photo/view',$thumb->photo_id) }}">
                             <img src="{{ asset('storage/thumbnails/'.$thumb->photo->name) }}" alt="thumbnail">
                         </a>
                         @endforeach
@@ -34,6 +34,7 @@
                             </div>
                         @endif
                         <hr>
+                        {{ $thumbs->links() }}
                         <div class="form-group">
                                 <input type="file" name="file">
                         </div>
@@ -45,7 +46,6 @@
                 </div>
             </div>
         </div>
-        {{ $thumbs->links() }}
     </div>
 </div>
 @endsection

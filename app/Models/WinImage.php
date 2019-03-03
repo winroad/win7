@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\User;
 use Image;
+use Storage;
 
 class WinImage
 {
@@ -34,8 +35,6 @@ class WinImage
     public function Thumbnail($size=100)
     {
         $image = Image::make($this->image);
-//        $this->width = $image->width();
-//        $this->height = $image->height();
         //縦幅が小さければ、縦幅に合わせてクロップします
         if($image->width() > $image->height()){
             $image->crop($image->height(), $image->height());
@@ -47,6 +46,16 @@ class WinImage
             $aspect->aspectRatio();
         });
         $image->save();
+    }
+    /*
+     * 個人所有のサムネイルを取得する
+     */
+    public function getMyThumbs($user,$num)
+    {
+        $thumbs = PhotoStore::where('user_id',$user->id)
+            ->where('dir',$this->thumb_dir)
+            ->paginate($num);
+        return $thumbs;
     }
     /*
      * リサイズする
@@ -102,23 +111,28 @@ class WinImage
      */
     public function Turn($id)
     {
-        $photo = Photo::find($id);
-        dd($photo->folder);
-        //        dd(storage_path($url));
-        $image = Image::make($this->image);
-        $image->filename = $photo->name;
-        $image->dirname = $photo->folder;
+        $store = PhotoStore::find($id);
+        //元画像を回転させる
+        $storage = Storage::get($store->dir.'/'.$store->photo->name);
+        $image = Image::make($storage);
+        $this->set($storage);
+        $image->filename = $store->photo->name;
+        $image->dirname = $store->dir;
         $image->path = '/tmp';
         $image->writable = true;
         $image->readable = true;
-//        dd($image);
         $image->rotate(90);
-        dd($image);
-        $image->save($image->dirname);
-//        $image->filename = 'test_file';
-//        dd($image);
-//        dd($image);
-//        dd($image->filesize());
-//        $image->save();
+        $image->save('storage/images/'.$store->photo->name);
+        //サムネイル画像を回転させる
+        $storage2 = Storage::get($this->thumb_dir.'/'.$store->photo->name);
+        $image2 = Image::make($storage2);
+        $this->set($storage2);
+        $image2->filename = $store->photo->name;
+        $image2->dirname = $this->thumb_dir;
+        $image2->path = '/tmp';
+        $image2->writable = true;
+        $image2->readable = true;
+        $image2->rotate(90);
+        $image2->save('storage/thumbnails/'.$store->photo->name);
     }
 }

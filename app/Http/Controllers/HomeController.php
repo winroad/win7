@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\User;
 use Image;
+use App\Models\PhotoStore;
 
 class HomeController extends Controller
 {
@@ -26,11 +27,11 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index()
+    public function index($num=20)
     {
         $user = User::find(auth()->id());
-        $photo = new Photo();
-        $thumbs = $photo->getMyThumbnails();
+        $win = new WinImage();
+        $thumbs = $win->getMyThumbs($user,$num);
         return view('home',compact('user','thumbs'));
     }
     /*
@@ -50,7 +51,6 @@ class HomeController extends Controller
         ]);
         if($request->file('file')->isValid([])){
             $file = $request->file;
-//            dd($file);
             $photo = new Photo();
             $photo->Upload($file);
             return redirect('/home')->with('success', '保存しました');
@@ -68,7 +68,6 @@ class HomeController extends Controller
     {
         $photo = Photo::find($id);
         $base = $photo->getBasePhoto();
-//        dd(asset($base->dir.'/'.$base->photo->name));
         return view('photos.view',compact('base'));
     }
     /*
@@ -85,71 +84,9 @@ class HomeController extends Controller
      */
     public function photoTurn($id)
     {
-        $photo = Photo::find($id);
-        $photo->turn($id);
+        $store = PhotoStore::find($id);
+        $win = new WinImage();
+        $win->turn($store->id);
         return redirect('home');
     }
-
-    /*
-     * アバターのアップロード処理
-     *
-     *
-    public function upload(Request $request)
-    {
-      $this->validate($request,[
-            'file' => [
-                'required',
-                'file',
-                'image',
-                'mimes:jpeg,png',
-                'dimensions:min_width=100,min_height=100,max_width=4000,max_height=4000',
-            ]
-        ]);
-        if($request->file('file')->isValid([])){
-            $avatar = $request->file;
-            $photo = new Photo();
-            $photo->Upload($avatar);
-
-
-            $img = new WinImage();
-            $img->set($avatar);
-            $img->resize(100);
-            $img->upload('public/images');
-
-//            $avatar = WinImage::get($request->file);
-//            dd($avatar);
-//            $win->upload($avatar);
-            $img = WinImage::get($avatar);
-//            $img300 = Image::make($avatar);
-//            $img->fit(100)->save();
-            $img->resize(100, null, function ($aspect){
-                $aspect->aspectRatio();
-            });
-            $img->save();
-            $avatar->store('public/images');
-            $img2 = WinImage::get($avatar);
-            $img2->resize(300, null, function ($aspect){
-                $aspect->aspectRatio();
-            });
-            $img2->save();
-            $avatar->store('public/images');
-            $file = $request->file->store('public/avatar');
-            $user = User::find(auth()->id());
-            //以前のファイルの削除
-            if(!is_null($user->avatar_filename)){
-                $old = 'public/avatar/'.$user->avatar_filename;
-                Storage::delete($old);
-            }
-            $user->avatar_filename = basename($file);
-            $user->save();
-
-            return redirect('/home')->with('success', '保存しました');
-        } else {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->withErrors(['file' => '画像がアップされていないか不正なデータです。']);
-        }
-    }
-    */
 }
