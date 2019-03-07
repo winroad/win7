@@ -109,7 +109,7 @@ class WinImage
     /*
      * 画像を回転させる
      */
-    public function Turn($id)
+    public function Turn($id,$angle)
     {
         $store = PhotoStore::find($id);
         //元画像を回転させる
@@ -121,18 +121,28 @@ class WinImage
         $image->path = '/tmp';
         $image->writable = true;
         $image->readable = true;
-        $image->rotate(90);
+        $image->rotate($angle);
         $image->save('storage/images/'.$store->photo->name);
+        $store->width = $image->width();
+        $store->height = $image->height();
+        $store->save();
+
         //サムネイル画像を回転させる
-        $storage2 = Storage::get($this->thumb_dir.'/'.$store->photo->name);
+        $thumb = PhotoStore::where('photo_id',$store->photo_id)
+            ->where('dir',$this->thumb_dir)
+            ->first();
+        $storage2 = Storage::get($this->thumb_dir.'/'.$thumb->photo->name);
         $image2 = Image::make($storage2);
         $this->set($storage2);
-        $image2->filename = $store->photo->name;
-        $image2->dirname = $this->thumb_dir;
+        $image2->filename = $thumb->photo->name;
+        $image2->dirname = $thumb->dir;
         $image2->path = '/tmp';
         $image2->writable = true;
         $image2->readable = true;
-        $image2->rotate(90);
-        $image2->save('storage/thumbnails/'.$store->photo->name);
+        $image2->rotate($angle);
+        $image2->save('storage/thumbnails/'.$thumb->photo->name);
+        $thumb->width = $image2->width();
+        $thumb->height = $image2->height();
+        $thumb->save();
     }
 }

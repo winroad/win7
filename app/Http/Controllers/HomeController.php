@@ -27,6 +27,14 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
+    /*
+     * 新規登録直後のページ
+     */
+    public function newly()
+    {
+
+        return view('newly');
+    }
     public function index($num=20)
     {
         $user = User::find(auth()->id());
@@ -82,11 +90,20 @@ class HomeController extends Controller
     /*
      * 画像の回転
      */
-    public function photoTurn($id)
+    public function photoTurn($id,$rotate)
     {
+        if($rotate == 1){
+            $angle = 270;
+        }elseif($rotate == 2){
+            $angle = 90;
+        }elseif($rotate == 3){
+            $angle = 180;
+        }else{
+            return back();
+        }
         $store = PhotoStore::find($id);
         $win = new WinImage();
-        $win->turn($store->id);
+        $win->turn($store->id,$angle);
         return redirect('home');
     }
 }

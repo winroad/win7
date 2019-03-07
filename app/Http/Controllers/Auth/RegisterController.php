@@ -7,6 +7,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Mail\ActivateMail;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -28,7 +31,8 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/newly';
+    protected $adminMail = 'nakada@builwing.com';
 
     /**
      * Create a new controller instance.
@@ -55,6 +59,17 @@ class RegisterController extends Controller
         ]);
     }
 
+    public function pre_check(Request $request){
+        $this->validator($request->all())->validate();
+        //flash data
+        $request->flashOnly( 'email');
+
+        $bridge_request = $request->all();
+        // password マスキング
+        $bridge_request['password_mask'] = '******';
+
+        return view('auth.register_check')->with($bridge_request);
+    }
     /**
      * Create a new user instance after a valid registration.
      *
@@ -63,10 +78,39 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'email_verify_token' => base64_encode($data['email']),
         ]);
+        \Mail::to($user->email)
+            ->send(new ActivateMail($user)); // 引数にリクエストデータを渡す
+        return $user;
+    }
+    /*
+     * ユーザー登録
+     */
+    public function register(Request $request)
+    {
+        event(new Registered($user = $this->create( $request->all() )));
+
+        return view('auth.registered');
+    }
+    /*
+     * ユーザーのアクティベート
+     */
+    public function activate($token)
+    {
+        //本登録の制限時間
+        $limit = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s') . '+3 hour'));
+        //本登録申請ユーザー
+        $user = User::where('email_verify_token',$token)->first();
+        if($user && $user->created_at < $limit){
+            $user->activate = 1;
+            $user->save();
+            return redirect('login')->with('alert','本登録が完了しましたので、ログインして下さい。');
+        }
+//        dd($user->name);
     }
 }
